@@ -55,7 +55,7 @@ cd mock-fan-app
 
 3. **Open Frontend**:
    - Open `index.html` in your browser (or serve with `python -m http.server` in the root directory).
-
+   - !!! Do not open the `index.html` in main folder open the file in `frontend\index.html` in your browser.
 4. **Test the App**:
    - Use demo credentials: API Key `demo_api_key`, Refresh Token `demo_refresh_token`.
    - Connect to load fans.
