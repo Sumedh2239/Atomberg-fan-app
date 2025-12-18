@@ -19,8 +19,6 @@ A modern, responsive mock application for controlling Atomberg smart fans. Built
 
 ```
 mock_fan_app/
-├── index.html          # Main HTML file
-├── script.js           # Frontend JavaScript
 ├── backend/            # Node.js server
 │   ├── server.js
 │   └── package.json
