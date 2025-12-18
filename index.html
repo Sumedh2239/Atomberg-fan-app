@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Atomberg Fan Control (Mock)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            atomDark: '#0b0b0b',
+            atomCard: '#161616',
+            atomYellow: '#f5c542'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    @keyframes spinFan {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .fan-on { animation: spinFan 1.5s linear infinite; }
+    .fan-off { opacity: 0.3; }
+
+    /* Premium Range Slider Styling */
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 24px;
+      width: 24px;
+      border-radius: 50%;
+      background: #f5c542;
+      cursor: pointer;
+      margin-top: -8px;
+      box-shadow: 0 0 10px rgba(245, 197, 66, 0.4);
+    }
+  </style>
+</head>
+
+<body class="bg-gray-100 text-gray-900 dark:bg-atomDark dark:text-white min-h-screen font-sans">
+
+<nav class="sticky top-0 z-40 bg-white/80 dark:bg-atomDark/80 backdrop-blur-md border-b border-gray-200 dark:border-white/10 px-4 md:px-10 py-4">
+  <div class="max-w-7xl mx-auto flex items-center justify-between">
+    <div class="flex flex-col">
+      <h1 class="text-base md:text-xl font-bold tracking-tight text-gray-800 dark:text-white">Atomberg Controller</h1>
+      <span class="text-[10px] md:text-xs text-gray-500 uppercase font-semibold">Smart Home Dashboard</span>
+    </div>
+
+    <button onclick="toggleTheme()" class="p-2.5 rounded-xl bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-all border border-transparent dark:border-white/10">
+      <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-atomYellow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 18v1m9-9h1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M16.242 16.242l.707.707M7.758 7.758l.707.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
+      </svg>
+    </button>
+  </div>
+</nav>
+
+<main class="max-w-7xl mx-auto p-4 md:p-10">
+  <div id="loginContainer" class="flex justify-center items-center min-h-[50vh]">
+    <div class="bg-white dark:bg-atomCard rounded-[2rem] p-6 shadow-xl w-full max-w-md">
+      <h3 class="text-xl font-bold text-center mb-4">Developer Login (Mock)</h3>
+      <div class="mb-3">
+        <input id="apiKey" class="form-control w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white" placeholder="API Key" value="demo_api_key" />
+      </div>
+      <div class="mb-4">
+        <input id="refreshToken" class="form-control w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white" placeholder="Refresh Token" value="demo_refresh_token" />
+      </div>
+      <div class="text-center">
+        <button class="w-full py-3 rounded-2xl bg-atomYellow hover:bg-yellow-500 text-black font-bold transition-all" onclick="connect()">Connect</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="dashboard" class="hidden">
+    <div class="flex gap-6 text-sm font-medium mb-8 overflow-x-auto pb-2 scrollbar-hide border-b border-gray-200 dark:border-white/10">
+      <button class="text-atomYellow border-b-2 border-atomYellow pb-2 whitespace-nowrap">All Devices</button>
+    </div>
+
+    <div id="fans" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+    </div>
+  </div>
+</main>
+
+<div id="modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex-col justify-end md:justify-center items-center z-50 p-0 md:p-4 opacity-0 transition-opacity duration-300">
+  <div class="bg-white dark:bg-atomCard w-full md:max-w-md rounded-t-[2.5rem] md:rounded-[2rem] p-6 md:p-8 shadow-2xl transition-transform duration-300 translate-y-full md:translate-y-0" id="modalContent">
+    <div class="w-12 h-1 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto mb-6 md:hidden"></div>
+
+    <div class="flex justify-between items-start mb-6">
+      <div>
+        <h2 id="modalTitle" class="text-xl md:text-2xl font-bold">Fan Name</h2>
+        <p id="modalRoom" class="text-sm text-gray-500 dark:text-gray-400 font-medium">Room</p>
+      </div>
+      <button onclick="closeModal()" class="hidden md:block p-2 text-gray-400 hover:text-gray-600 dark:hover:text-white">✕</button>
+    </div>
+
+    <button id="powerBtn" class="w-full py-4 rounded-2xl bg-atomYellow hover:bg-yellow-500 text-black font-bold text-lg transition-all active:scale-[0.98] mb-6 flex items-center justify-center gap-2">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      <span id="powerBtnText">Toggle Power</span>
+    </button>
+
+    <div class="mb-8 space-y-4">
+      <div class="flex justify-between items-center">
+        <label class="text-xs font-bold uppercase tracking-widest text-gray-500">Speed Level</label>
+        <span id="speedValueDisplay" class="text-atomYellow font-bold text-xl">1</span>
+      </div>
+      <input id="modalSpeed" type="range" min="1" max="5" step="1" 
+        class="w-full h-2 bg-gray-200 dark:bg-gray-800 rounded-lg appearance-none cursor-pointer accent-atomYellow">
+      <div class="flex justify-between text-[10px] text-gray-400 font-black px-1">
+        <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+      </div>
+    </div>
+
+    <button onclick="closeModal()" class="md:hidden w-full py-4 text-gray-400 font-bold text-sm uppercase tracking-widest">
+      Close Panel
+    </button>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
